@@ -1,0 +1,27 @@
+﻿@model Business.Dto.NewsDto
+@{
+    ViewBag.Title = "Details";
+}
+<div class="container">
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item bg-secondary text-white font-weight-bold d-flex justify-content-between align-items-center">
+            <span> Title: @Model.Title</span>
+            <a href="@Url.Action("Edit", "News", new { id = Model.Id })" class="btn btn-primary">
+                <i class="icofont-ui-edit"></i>
+            </a>
+        </li>
+        <li class="list-group-item">Date: @Model.Date.ToString("dd MMM yyyy")</li>
+        <li class="list-group-item">Body: @Model.Body</li>
+        <li class="list-group-item">
+            Image:
+            @if (Model.Image.Length != 0)
+            {
+                 <img src = "data:image;base64,@System.Convert.ToBase64String(Model.Image)" style = "width:250px;height:150px;" />
+            }else
+            {
+                < div > No Image </ div >
+            }
+        </li>
+        <li class="list-group-item">Category Name: @Model.CategoryName</li>
+    </ul>
+</div>

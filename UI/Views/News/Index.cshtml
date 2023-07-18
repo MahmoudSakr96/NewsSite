@@ -1,0 +1,137 @@
+﻿@using System.Web.Helpers;
+@model Business.Dto.NewsGrid
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<script type="text/javascript">
+    
+</script>
+<div class="container">
+    <h2 class="text-primary">News</h2>
+    <hr />
+    @if (this.User.Identity.IsAuthenticated)
+    {
+        <a href="@Url.Action("Create")" class="btn btn-primary my-4">
+            <i class="icofont-plus"></i>
+            Add New
+        </a>
+    }
+    <span id="Message" class="d-none">@TempData["Message"]</span>
+    <div class="alert alert-warning @(Model.News.Any() ? "d-none" : "")">
+        No News added yet!
+    </div>
+    @using (Html.BeginForm("Index", "News", FormMethod.Post, new { @Id = "WebGridForm" }))
+    {
+        @Html.DropDownList("Category", new SelectList(Model.Categories, "Id", "Name"), "All", new { @id = "ddlCategories" })
+        <input id="CategoryId" name="CategoryId" type="number" value="5" hidden>
+    }
+    <hr />
+    <table class="table @(!Model.News.Any() ? "d-none" : "")">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Body</th>
+                <th>Image</th>
+                @if (this.User.Identity.IsAuthenticated)
+                {
+                   <th>Action</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var News in Model.News)
+            {
+                <tr>
+                    <td>@Html.ActionLink(News.Title, "Details", "News", new { id = News.Id }, null)</td>
+                    <td>@News.Date.ToString("dd MMM yyyy")</td>
+                    <td>@News.Body</td>
+                    @if (News.Image.Length != 0 )
+                    {
+                        <td><img src="data:image;base64,@System.Convert.ToBase64String(News.Image)" style="width:50px;height:50px;" /></td>
+                    } else {
+                        <td>No Image</td>
+                    }
+                    @if (this.User.Identity.IsAuthenticated)
+                    {
+                        <td>
+                            <a href="@Url.Action("Edit", "News", new { id = News.Id })" class="btn btn-primary">
+                                <i class="icofont-ui-edit"></i>
+                                Edit
+                            </a>
+                            <a href="javascript:;" class="btn btn-danger js-delete" data-id="@News.Id">
+                                <i class="icofont-ui-close"></i>
+                                Delete
+                            </a>
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts
+{
+    <script>
+        $("body").on("change", "#ddlCategories", function (value) {
+            $("#CategoryId").val($("#ddlCategories").val());
+            $('#WebGridForm')[0].submit();
+        });
+        $(document).ready(function () {
+            toastr.options = {
+                "preventDuplicates": true
+            }
+            var message = $('#Message').text();
+            if (message !== '') {
+                toastr.success(message);
+            }
+            $('.js-delete').on('click', function () {
+                var btn = $(this);
+                bootbox.confirm({
+                    message: "Are you sure that you need to delete this News?",
+                    buttons: {
+                        confirm: {
+                            label: 'Yes',
+                            className: 'btn-danger'
+                        },
+                        cancel: {
+                            label: 'No',
+                            className: 'btn-outline-secondary'
+                        }
+                    },
+                    callback: function (result) {
+                        console.log(btn.data('id'))
+                        if (result) {
+                            $.ajax({
+                                method: 'POST',
+                                url: '@Url.Action("Delete", "ApiNews")',
+                                data: { id: btn.data('id') },
+                                success: function () {
+
+                                    if ($('tbody tr').length === 1)
+                                        $('table').fadeOut(function () {
+                                            this.remove();
+                                            $('.alert').removeClass('d-none');
+                                        });
+
+                                    else
+                                        btn.parents('tr').fadeOut(function () {
+                                            this.remove();
+                                        });
+
+                                    toastr.success('News deleted');
+                                },
+                                error: function () {
+                                    toastr.error('Something went wrong!');
+                                }
+                            });
+                        }
+                    }
+                });                
+            });
+        });
+    </script>
+}
